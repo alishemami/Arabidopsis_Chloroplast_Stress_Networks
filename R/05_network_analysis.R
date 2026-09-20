@@ -1,6 +1,7 @@
-# Build chloroplast stress network tables
+
 
 library(dplyr)
+
 
 
 # Load candidate genes
@@ -10,32 +11,38 @@ network_nodes <- read.csv(
 )
 
 
+
 # Define functional categories
-# Order matters: specific categories first
 
 network_nodes$category <- "Chloroplast maintenance"
 
 
+# Chloroplast RNA processing module
+
 network_nodes$category[
   grepl(
-    "RNA editing|editing factor|RNA-binding domain|transcript",
+    "RNA editing|editing factor|RNA-binding|transcript",
     network_nodes$GENENAME,
     ignore.case = TRUE
   )
 ] <- "Chloroplast RNA processing"
 
 
+
+# Photosynthetic machinery module
+
 network_nodes$category[
-  grepl(
-    "photosystem|photosynthetic|light-harvesting|thylakoid",
-    network_nodes$GENENAME,
-    ignore.case = TRUE
-  )
+  network_nodes$category == "Chloroplast maintenance" &
+    grepl(
+      "photosystem|photosynthetic|light-harvesting|thylakoid",
+      network_nodes$GENENAME,
+      ignore.case = TRUE
+    )
 ] <- "Photosynthetic machinery"
 
 
 
-# Add CLPD as predefined central candidate
+# Add CLPD as central stress candidate
 
 clpd_node <- data.frame(
   
@@ -51,6 +58,7 @@ clpd_node <- data.frame(
 )
 
 
+
 network_nodes <- bind_rows(
   network_nodes,
   clpd_node
@@ -62,7 +70,7 @@ network_nodes <- bind_rows(
 
 
 
-# Save nodes
+# Save network nodes
 
 write.csv(
   network_nodes,
@@ -72,11 +80,12 @@ write.csv(
 
 
 
-# Conceptual biological relationships
+# Define conceptual biological relationships
 
 edges <- data.frame(
   
   source = c(
+    "CLPD",
     "CLPD",
     "CLPD",
     "CLPD",
@@ -88,6 +97,7 @@ edges <- data.frame(
     "Clp proteostasis",
     "Chloroplast RNA processing",
     "Photosynthetic machinery",
+    "Chloroplast maintenance",
     "Plastid transcript regulation",
     "Light harvesting machinery"
   ),
@@ -96,6 +106,7 @@ edges <- data.frame(
     "associated with increased chloroplast proteostasis response",
     "associated with chloroplast RNA maintenance",
     "associated with altered photosynthetic program",
+    "linked to chloroplast stress adaptation",
     "increased chloroplast RNA processing activity",
     "reduced photosynthetic capacity"
   )
@@ -104,6 +115,8 @@ edges <- data.frame(
 
 
 
+# Save network edges
+
 write.csv(
   edges,
   "results/tables/chloroplast_network_edges.csv",
@@ -111,6 +124,8 @@ write.csv(
 )
 
 
+
+# Summary
 
 cat(
   "Network nodes:",
