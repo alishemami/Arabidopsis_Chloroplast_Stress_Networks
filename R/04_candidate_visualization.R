@@ -113,24 +113,33 @@ ggsave(
 
 
 
-# Candidate heatmap
+# Candidate heatmap using variance stabilized expression
+
+library(DESeq2)
 
 load(
   "data/processed_counts.RData"
 )
 
-
 candidate_ids <- final_candidates$TAIR
 
 
-candidate_counts <- counts[
-  rownames(counts) %in% candidate_ids,
-]
-
-
-candidate_expression <- log2(
-  candidate_counts + 1
+dds_heatmap <- DESeqDataSetFromMatrix(
+  countData = counts,
+  colData = sample_info,
+  design = ~ condition
 )
+
+
+vsd_heatmap <- vst(
+  dds_heatmap,
+  blind = TRUE
+)
+
+
+candidate_expression <- assay(vsd_heatmap)[
+  rownames(vsd_heatmap) %in% candidate_ids,
+]
 
 
 candidate_expression <- t(
