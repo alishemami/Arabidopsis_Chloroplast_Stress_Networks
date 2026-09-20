@@ -1,6 +1,5 @@
 # Build chloroplast stress network tables
 
-
 library(dplyr)
 
 
@@ -11,18 +10,44 @@ network_nodes <- read.csv(
 )
 
 
+# Define functional categories
+# Order matters: specific categories first
+
+network_nodes$category <- "Chloroplast maintenance"
+
+
+network_nodes$category[
+  grepl(
+    "RNA editing|editing factor|RNA-binding domain|transcript",
+    network_nodes$GENENAME,
+    ignore.case = TRUE
+  )
+] <- "Chloroplast RNA processing"
+
+
+network_nodes$category[
+  grepl(
+    "photosystem|photosynthetic|light-harvesting|thylakoid",
+    network_nodes$GENENAME,
+    ignore.case = TRUE
+  )
+] <- "Photosynthetic machinery"
+
+
 
 # Add CLPD as predefined central candidate
 
 clpd_node <- data.frame(
+  
   TAIR = "AT5G51070",
   SYMBOL = "CLPD",
   GENENAME = "ATP-dependent Clp protease regulatory subunit",
   log2FoldChange = 3.564841,
   padj = 8.478012e-144,
   direction = "Up",
-  category = "Clp protease system",
+  category = "Clp proteostasis",
   evidence = "Strong induction of CLPD"
+  
 )
 
 
@@ -37,28 +62,7 @@ network_nodes <- bind_rows(
 
 
 
-# Define functional categories
-
-network_nodes$category[
-  grepl(
-    "RNA editing|editing factor",
-    network_nodes$GENENAME,
-    ignore.case = TRUE
-  )
-] <- "Chloroplast RNA editing"
-
-
-network_nodes$category[
-  grepl(
-    "thylakoid|plastid|chloroplast",
-    network_nodes$GENENAME,
-    ignore.case = TRUE
-  )
-] <- "Chloroplast maintenance"
-
-
-
-# Save network nodes
+# Save nodes
 
 write.csv(
   network_nodes,
@@ -68,35 +72,34 @@ write.csv(
 
 
 
-# Define conceptual biological relationships
+# Conceptual biological relationships
 
 edges <- data.frame(
+  
   source = c(
     "CLPD",
     "CLPD",
     "CLPD",
-    "RNA editing",
-    "Photosynthesis",
-    "Chloroplast transcription"
+    "Chloroplast RNA processing",
+    "Photosynthetic machinery"
   ),
   
   target = c(
-    "RNA editing",
-    "Photosynthesis",
-    "Chloroplast maintenance",
+    "Clp proteostasis",
+    "Chloroplast RNA processing",
+    "Photosynthetic machinery",
     "Plastid transcript regulation",
-    "Light harvesting machinery",
-    "Photosynthetic regulation"
+    "Light harvesting machinery"
   ),
   
   relationship = c(
-    "associated with increased RNA maintenance response",
-    "associated with reduced photosynthetic program",
-    "linked to chloroplast stress adaptation",
+    "associated with increased chloroplast proteostasis response",
+    "associated with chloroplast RNA maintenance",
+    "associated with altered photosynthetic program",
     "increased chloroplast RNA processing activity",
-    "reduced photosynthetic capacity",
-    "reduced transcriptional regulation of chloroplast programs"
+    "reduced photosynthetic capacity"
   )
+  
 )
 
 
